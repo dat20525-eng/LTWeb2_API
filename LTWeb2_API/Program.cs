@@ -1,5 +1,6 @@
 using LTWeb2_API.Data;
 using Microsoft.EntityFrameworkCore;
+using LTWeb2_API.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,9 +10,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 
-// ==========================
-// DATABASE CONNECTION
-// ==========================
 
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection");
@@ -20,6 +18,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(connectionString);
 });
+builder.Services.AddScoped<IBookRepository, SQLBookRepository>();
 
 
 var app = builder.Build();
