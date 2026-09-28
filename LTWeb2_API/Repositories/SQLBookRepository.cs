@@ -14,7 +14,15 @@ namespace LTWeb2_API.Repositories
         }
 
 
-        public List<BookWithAuthorAndPublisherDTO> GetAllBooks()
+
+
+        public List<BookWithAuthorAndPublisherDTO> GetAllBooks(
+    string? filterOn = null,
+    string? filterQuery = null,
+    string? sortBy = null,
+    bool isAscending = true,
+    int pageNumber = 1,
+    int pageSize = 1000)
         {
             var allBooks = _dbContext.Books
                 .Select(book =>
@@ -43,10 +51,42 @@ namespace LTWeb2_API.Repositories
                             .Select(n => n.Author.FullName)
                             .ToList()
                     })
-                .ToList();
+                .AsQueryable();
 
-            return allBooks;
+            if (string.IsNullOrWhiteSpace(filterOn) == false &&
+                string.IsNullOrWhiteSpace(filterQuery) == false)
+            {
+                if (filterOn.Equals(
+                    "title",
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    allBooks = allBooks.Where(
+                        x => x.Title != null &&
+                             x.Title.Contains(filterQuery));
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(sortBy) == false)
+            {
+                if (sortBy.Equals(
+                    "title",
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    allBooks = isAscending
+                        ? allBooks.OrderBy(x => x.Title)
+                        : allBooks.OrderByDescending(x => x.Title);
+                }
+            }
+
+            var skipResults =
+                (pageNumber - 1) * pageSize;
+
+            return allBooks
+                .Skip(skipResults)
+                .Take(pageSize)
+                .ToList();
         }
+
 
 
 
@@ -81,11 +121,11 @@ namespace LTWeb2_API.Repositories
         }
 
 
+ 
 
         public AddBookRequestDTO AddBook(
             AddBookRequestDTO addBookRequestDTO)
         {
-  
             var bookDomainModel = new Book
             {
                 Title = addBookRequestDTO.Title,
@@ -118,6 +158,7 @@ namespace LTWeb2_API.Repositories
         }
 
 
+ 
 
         public AddBookRequestDTO? UpdateBookById(
             int id,
@@ -169,8 +210,7 @@ namespace LTWeb2_API.Repositories
         }
 
 
-
-
+ 
         public Book? DeleteBookById(int id)
         {
             var bookDomain = _dbContext.Books
